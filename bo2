@@ -3008,21 +3008,34 @@ uSt.tzPeers = uSt.tzPeers or {}
 uSt.tzPath = function()
   if uSt.tzPathCache ~= nil then return uSt.tzPathCache end
   local cands = {}
+  local function add(p) if p ~= nil and p ~= "" then cands[#cands + 1] = p end end
+
+  -- ⚠️ لا نضع الملف في مجلد الحلبة إطلاقاً: السيرفر يتحقّق من سلامة الحلبة
+  -- وأي ملف إضافي يمنع الدخول ("failed to verify content integrity").
+  -- مجلدات السيارات آمنة: الفحص فيها على data.acd فقط.
   pcall(function()
-    local t = ac.getFolder(ac.FolderID.CurrentTrack)
-    if t then
-      cands[#cands + 1] = t .. "/" .. uSt.TZ_FILE
-      cands[#cands + 1] = t .. "/extension/" .. uSt.TZ_FILE
-      cands[#cands + 1] = t .. "/models/" .. uSt.TZ_FILE
+    local base = ac.getFolder(ac.FolderID.ContentCars)
+    local sim = ac.getSim()
+    local seen = {}
+    for i = 0, ((sim and sim.carsCount) or 24) - 1 do
+      local id = nil
+      pcall(function() id = ac.getCarID(i) end)
+      if id ~= nil and id ~= "" and not seen[id] then
+        seen[id] = true
+        add(base .. "/" .. id .. "/" .. uSt.TZ_FILE)
+        add(base .. "/" .. id .. "/extension/" .. uSt.TZ_FILE)
+      end
     end
   end)
-  pcall(function()
-    local c = ac.getFolder(ac.FolderID.ContentCars) .. "/" .. ac.getCarID(0)
-    cands[#cands + 1] = c .. "/" .. uSt.TZ_FILE
-  end)
+  -- مجلدات CSP العامة (لمن يضعه يدوياً)
+  pcall(function() add(ac.getFolder(ac.FolderID.ExtCfgUser) .. "/" .. uSt.TZ_FILE) end)
+  pcall(function() add(ac.getFolder(ac.FolderID.Root) .. "/extension/" .. uSt.TZ_FILE) end)
+  pcall(function() add(ac.getFolder(ac.FolderID.ScriptOrigin) .. "/" .. uSt.TZ_FILE) end)
+  pcall(function() add(ac.getFolder(ac.FolderID.ScriptOrigin) .. "/models/" .. uSt.TZ_FILE) end)
+
   for _, p in ipairs(cands) do
-    local f = io.open(p, "rb")
-    if f then f:close(); uSt.tzPathCache = p; return p end
+    local ok, f = pcall(function() return io.open(p, "rb") end)
+    if ok and f then f:close(); uSt.tzPathCache = p; return p end
   end
   uSt.tzPathCache = false
   return false
@@ -8208,7 +8221,8 @@ uSt.drawTz = function(X, Y, W, H)
   if path == false then
     dwRightBox("مجسّم التعزيز غير موجود في محتوى السيرفر", 14, X, y, W, 22, CR); y = y + 26
     dwRightBox("الملف المطلوب: " .. uSt.TZ_FILE, 12, X, y, W, 18, CDm); y = y + 22
-    dwRightBox("يوضع داخل مجلد الحلبة فيصل كل اللاعبين تلقائياً.", 12, X, y, W, 18, CDm)
+    dwRightBox("ضعه في مجلد السيارة: content/cars/<السيارة>/", 12, X, y, W, 18, CDm); y = y + 20
+    dwRightBox("لا تضعه في مجلد الحلبة — يمنع الدخول للسيرفر.", 12, X, y, W, 18, CR)
     return
   end
 
