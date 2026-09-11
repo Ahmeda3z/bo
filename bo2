@@ -3010,9 +3010,17 @@ uSt.tzPath = function()
   local cands = {}
   local function add(p) if p ~= nil and p ~= "" then cands[#cands + 1] = p end end
 
-  -- ⚠️ لا نضع الملف في مجلد الحلبة إطلاقاً: السيرفر يتحقّق من سلامة الحلبة
-  -- وأي ملف إضافي يمنع الدخول ("failed to verify content integrity").
-  -- مجلدات السيارات آمنة: الفحص فيها على data.acd فقط.
+  -- سكربتات السيرفر مقيّدة: تحميل KN5 من مجلدات السيارات يرجع هيكلاً فارغاً.
+  -- مجلد الحلبة هو المسار المسموح، فنجرّبه أولاً.
+  pcall(function()
+    local t = ac.getFolder(ac.FolderID.CurrentTrack)
+    if t then
+      add(t .. "/" .. uSt.TZ_FILE)
+      add(t .. "/extension/" .. uSt.TZ_FILE)
+      add(t .. "/models/" .. uSt.TZ_FILE)
+      add(t .. "/../" .. uSt.TZ_FILE)
+    end
+  end)
   pcall(function()
     local base = ac.getFolder(ac.FolderID.ContentCars)
     local sim = ac.getSim()
@@ -3079,9 +3087,16 @@ uSt.tzAttach = function(i)
     pcall(function()
       local ok, mn, mx = pcall(function() return ref:getStaticAABB() end)
       if ok and mn ~= nil and mx ~= nil then
-        uSt.tzBox = string.format("الحجم %.1f×%.1f×%.1f م · المركز %.1f,%.1f,%.1f",
-          mx.x - mn.x, mx.y - mn.y, mx.z - mn.z,
-          (mx.x + mn.x) * 0.5, (mx.y + mn.y) * 0.5, (mx.z + mn.z) * 0.5)
+        local dx, dy, dz = mx.x - mn.x, mx.y - mn.y, mx.z - mn.z
+        if dx > 1000 or dy > 1000 or dz > 1000 or dx ~= dx then
+          -- أبعاد خيالية = هيكل فارغ بلا هندسة (CSP منع التحميل من هذا المسار)
+          uSt.tzBox = "⚠ حُمِّل بلا هندسة — المسار غير مسموح لسكربت السيرفر"
+          uSt.tzEmpty = true
+        else
+          uSt.tzEmpty = false
+          uSt.tzBox = string.format("الحجم %.2f×%.2f×%.2f م · المركز %.2f,%.2f,%.2f",
+            dx, dy, dz, (mx.x + mn.x) * 0.5, (mx.y + mn.y) * 0.5, (mx.z + mn.z) * 0.5)
+        end
       end
     end)
   end
@@ -8256,8 +8271,8 @@ uSt.drawTz = function(X, Y, W, H)
   if path == false then
     dwRightBox("مجسّم التعزيز غير موجود في محتوى السيرفر", 14, X, y, W, 22, CR); y = y + 26
     dwRightBox("الملف المطلوب: " .. uSt.TZ_FILE, 12, X, y, W, 18, CDm); y = y + 22
-    dwRightBox("ضعه في مجلد السيارة: content/cars/<السيارة>/", 12, X, y, W, 18, CDm); y = y + 20
-    dwRightBox("لا تضعه في مجلد الحلبة — يمنع الدخول للسيرفر.", 12, X, y, W, 18, CR)
+    dwRightBox("ضعه في مجلد الحلبة: content/tracks/<الحلبة>/", 12, X, y, W, 18, CDm); y = y + 20
+    dwRightBox("على جهازك فقط — لا ترفعه لمجلد الحلبة في السيرفر.", 12, X, y, W, 18, CY)
     return
   end
 
