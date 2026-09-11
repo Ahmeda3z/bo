@@ -32,7 +32,7 @@ local PALETTE = {
   { name = "وردي",    c = rgbm(0.96, 0.36, 0.62, 1) },
   { name = "أحمر",    c = rgbm(0.95, 0.32, 0.32, 1) },
 }
-local stor = ac.storage({ accentIdx = 1, driftEnabled = true, rulesAgreed = false, chatOpacity = 0.95, menuOpacity = 0.95, menuOfsX = 0, menuOfsY = 0, chatOfsX = 0, chatOfsY = 0, admOfsX = 0, admOfsY = 0, rec1 = "😂", rec2 = "👑", rec3 = "🫡", perfMode = false, extraKeep = true, chatW = 640, chatHistH = 186, tpDist = 8, boostMode = 1, boostTarget = 250, boostAccel = 60, chatEmoji = true, chatPhrases = true, uiScale = 1.0, uiFit = false, npScale = 100, npFlag = true, npDev = true, npSpd = true, npPing = true, npVanilla = false, tpPerm = 0, menuLayout = 1, setOfsX = 0, setOfsY = 0, npMax = 220, glowEdges = true, npName = true, npImg = true, npDist = false, npHideGame = false, npHideDist = 99, timeFlip12 = false, tf12fix = false, pmFrom = 0, pmPublic = true, pmStyle = 0, barPosPub = 0, barPosPm = 0, blockList = "", tzOn = false, tzX = 0, tzY = 0, tzZ = 0, tzYaw = 0, tzPitch = 0, tzRoll = 0, tzScale = 100, npShow = true, phW = 880, phPad = 0, phX = -1, phY = -1, fxMode = 0, fxPower = 100, fxBri = 100, fxSat = 100, fxHue = 0, pipFov = 40, camOn = false, camBright = 78, camOut = false, camDist = 7, camDir = 0, camW = 420, camFov = 62, camX = 0, camY = 0, swapPend = false, swapAt = 0, swapX = 0, swapY = 0, swapZ = 0, swapDX = 0, swapDZ = 1, hudDrift = true, hudBottom = true, hudRewind = true, hudRules = true })
+local stor = ac.storage({ accentIdx = 1, driftEnabled = true, rulesAgreed = false, chatOpacity = 0.95, menuOpacity = 0.95, menuOfsX = 0, menuOfsY = 0, chatOfsX = 0, chatOfsY = 0, admOfsX = 0, admOfsY = 0, rec1 = "😂", rec2 = "👑", rec3 = "🫡", perfMode = false, extraKeep = true, chatW = 640, chatHistH = 186, tpDist = 8, boostMode = 1, boostTarget = 250, boostAccel = 60, chatEmoji = true, chatPhrases = true, uiScale = 1.0, uiFit = false, npScale = 100, npFlag = true, npDev = true, npSpd = true, npPing = true, npVanilla = false, tpPerm = 0, menuLayout = 1, setOfsX = 0, setOfsY = 0, npMax = 220, glowEdges = true, npName = true, npImg = true, npDist = false, npHideGame = false, npHideDist = 99, timeFlip12 = false, tf12fix = false, pmFrom = 0, pmPublic = true, pmStyle = 0, barPosPub = 0, barPosPm = 0, blockList = "", tzOn = false, tzChar = 1, tzX = 0.36, tzY = 0.62, tzZ = -0.10, tzYaw = 0, tzPitch = 0, tzRoll = 0, tzScale = 100, npShow = true, phW = 880, phPad = 0, phX = -1, phY = -1, fxMode = 0, fxPower = 100, fxBri = 100, fxSat = 100, fxHue = 0, pipFov = 40, camOn = false, camBright = 78, camOut = false, camDist = 7, camDir = 0, camW = 420, camFov = 62, camX = 0, camY = 0, swapPend = false, swapAt = 0, swapX = 0, swapY = 0, swapZ = 0, swapDX = 0, swapDZ = 1, hudDrift = true, hudBottom = true, hudRewind = true, hudRules = true })
 if stor.chatOpacity < 0.35 then stor.chatOpacity = 0.95 end
 if stor.menuOpacity < 0.35 then stor.menuOpacity = 0.95 end
 if stor.accentIdx < 1 or stor.accentIdx > #PALETTE then stor.accentIdx = 1 end
@@ -280,14 +280,15 @@ ac.onChatMessage(function(message, carIdx)
     local tzs = msg:match("^%$KB_TZ:(.*)$")
     if tzs ~= nil then
       if carIdx ~= nil and carIdx >= 0 then
-        local on, x, y, z, ya, pi2, ro, sc =
-          tzs:match("^([01])|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|(%d+)$")
+        local on, x, y, z, ya, pi2, ro, sc, ch =
+          tzs:match("^([01])|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|([%-%d%.]+)|(%d+)|(%d+)$")
         if on ~= nil then
           local d = uSt.tzPeers[carIdx] or {}
           d.on = (on == "1")
           d.x, d.y, d.z = tonumber(x) or 0, tonumber(y) or 0, tonumber(z) or 0
           d.yaw, d.pitch, d.roll = tonumber(ya) or 0, tonumber(pi2) or 0, tonumber(ro) or 0
           d.sc = tonumber(sc) or 100
+          d.ch = math.max(1, math.min(#uSt.TZ_CHARS, tonumber(ch) or 1))
           d.dirty = true
           uSt.tzPeers[carIdx] = d
         end
@@ -3002,173 +3003,83 @@ end
 
 -- ═══════════ تركيب تعزيز (مجسّم الراكب) ═══════════
 -- المجسّم يُوزَّع مع محتوى السيرفر (مجلد الحلبة)، فلا يحمّل اللاعب شيئاً.
-uSt.TZ_FILE = "t3zizmotr.kn5"
+-- المجسّمات (KN5) ممنوعة على سكربتات السيرفر في CSP — تُحمَّل بلا هندسة.
+-- البديل العملي: راكب مرسوم كلوح صورة شفّافة داخل السيارة، بنفس آلية
+-- «تركيب عبارات» التي تعمل عندك (render.quad ملتصق بـ bodyTransform).
+uSt.TZ_CHARS = {
+  { n = "راكب ١", u = "https://i.ibb.co/RLrkJw9/kabos.png" },
+  { n = "راكب ٢", u = "https://i.ibb.co/RLrkJw9/kabos.png" },
+  { n = "راكب ٣", u = "https://i.ibb.co/RLrkJw9/kabos.png" },
+}
 uSt.tzPeers = uSt.tzPeers or {}
 
-uSt.tzPath = function()
-  if uSt.tzPathCache ~= nil then return uSt.tzPathCache end
-  local cands = {}
-  local function add(p) if p ~= nil and p ~= "" then cands[#cands + 1] = p end end
-
-  -- سكربتات السيرفر مقيّدة: تحميل KN5 من مجلدات السيارات يرجع هيكلاً فارغاً.
-  -- مجلد الحلبة هو المسار المسموح، فنجرّبه أولاً.
-  pcall(function()
-    local t = ac.getFolder(ac.FolderID.CurrentTrack)
-    if t then
-      add(t .. "/" .. uSt.TZ_FILE)
-      add(t .. "/extension/" .. uSt.TZ_FILE)
-      add(t .. "/models/" .. uSt.TZ_FILE)
-      add(t .. "/../" .. uSt.TZ_FILE)
-    end
-  end)
-  pcall(function()
-    local base = ac.getFolder(ac.FolderID.ContentCars)
-    local sim = ac.getSim()
-    local seen = {}
-    for i = 0, ((sim and sim.carsCount) or 24) - 1 do
-      local id = nil
-      pcall(function() id = ac.getCarID(i) end)
-      if id ~= nil and id ~= "" and not seen[id] then
-        seen[id] = true
-        add(base .. "/" .. id .. "/" .. uSt.TZ_FILE)
-        add(base .. "/" .. id .. "/extension/" .. uSt.TZ_FILE)
-      end
-    end
-  end)
-  -- مجلدات CSP العامة (لمن يضعه يدوياً)
-  pcall(function() add(ac.getFolder(ac.FolderID.ExtCfgUser) .. "/" .. uSt.TZ_FILE) end)
-  pcall(function() add(ac.getFolder(ac.FolderID.Root) .. "/extension/" .. uSt.TZ_FILE) end)
-  pcall(function() add(ac.getFolder(ac.FolderID.ScriptOrigin) .. "/" .. uSt.TZ_FILE) end)
-  pcall(function() add(ac.getFolder(ac.FolderID.ScriptOrigin) .. "/models/" .. uSt.TZ_FILE) end)
-
-  for _, p in ipairs(cands) do
-    local ok, f = pcall(function() return io.open(p, "rb") end)
-    if ok and f then f:close(); uSt.tzPathCache = p; return p end
+uSt.tzTex = function(k)
+  local c = uSt.TZ_CHARS[k or 1]
+  if c == nil then return nil end
+  if uSt.tzTexCache == nil then uSt.tzTexCache = {} end
+  if uSt.tzTexCache[k] == nil then
+    local ok = pcall(function() ui.decodeImage(c.u) end)
+    uSt.tzTexCache[k] = ok and c.u or false
   end
-  uSt.tzPathCache = false
-  return false
-end
-
--- تركيب المجسّم على سيارة رقم i (0 = سيارتك)
-uSt.tzAttach = function(i)
-  local path = uSt.tzPath()
-  if path == false then uSt.tzWhy = "لا يوجد ملف"; return nil end
-  local ref, why = nil, ""
-
-  -- ١) جذر السيارة
-  pcall(function()
-    local root = ac.findNodes("carRoot:" .. i)
-    if root == nil then why = why .. " carRoot=nil"
-    else
-      why = why .. " carRoot=" .. tostring(root:size())
-      local ok, r = pcall(function() return root:loadKN5(path) end)
-      if ok and r ~= nil then ref = r else why = why .. " loadFail" end
-    end
-  end)
-
-  -- ٢) بديل: التحميل في جذر المشهد ثم تثبيته على السيارة
-  if ref == nil then
-    pcall(function()
-      local sr = ac.findNodes("sceneRoot:yes")
-      if sr ~= nil then
-        local ok, r = pcall(function() return sr:loadKN5(path) end)
-        if ok and r ~= nil then ref = r; why = why .. " viaScene" end
-      end
-    end)
-  end
-
-  if ref == nil then
-    uSt.tzWhy = "فشل التحميل:" .. why
-  else
-    local n = 0
-    pcall(function() local ms = ref:findMeshes("{ lodIn:0 }"); if ms then n = ms:size() end end)
-    uSt.tzWhy = "تم التحميل (" .. tostring(n) .. " شبكة)"
-    -- حجم المجسّم وموضعه الأصلي: بهما نعرف هل هو ضخم أو بعيد عن السيارة
-    pcall(function()
-      local ok, mn, mx = pcall(function() return ref:getStaticAABB() end)
-      if ok and mn ~= nil and mx ~= nil then
-        local dx, dy, dz = mx.x - mn.x, mx.y - mn.y, mx.z - mn.z
-        if dx > 1000 or dy > 1000 or dz > 1000 or dx ~= dx then
-          -- أبعاد خيالية = هيكل فارغ بلا هندسة (CSP منع التحميل من هذا المسار)
-          uSt.tzBox = "⚠ حُمِّل بلا هندسة — المسار غير مسموح لسكربت السيرفر"
-          uSt.tzEmpty = true
-        else
-          uSt.tzEmpty = false
-          uSt.tzBox = string.format("الحجم %.2f×%.2f×%.2f م · المركز %.2f,%.2f,%.2f",
-            dx, dy, dz, (mx.x + mn.x) * 0.5, (mx.y + mn.y) * 0.5, (mx.z + mn.z) * 0.5)
-        end
-      end
-    end)
-  end
-  return ref
-end
-
-uSt.tzApply = function(ref, x, y, z, yaw, pitch, roll, sc)
-  if ref == nil then return end
-  pcall(function()
-    ref:setVisible(true)
-    ref:setRotation(vec3(0, 1, 0), math.rad(yaw or 0))
-    ref:rotate(vec3(1, 0, 0), math.rad(pitch or 0))
-    ref:rotate(vec3(0, 0, 1), math.rad(roll or 0))
-    local m = ref:getTransformationRaw()
-    if m then
-      local k = (tonumber(sc) or 100) / 100
-      m.side = m.side * k; m.up = m.up * k; m.look = m.look * k
-    end
-    ref:setPosition(vec3(x or 0, y or 0, z or 0))
-    ref:clearMotion()
-  end)
+  return uSt.tzTexCache[k] or nil
 end
 
 uSt.tzMine = function()
-  return tonumber(uSt.sget("tzX", 0)) or 0, tonumber(uSt.sget("tzY", 0)) or 0,
-         tonumber(uSt.sget("tzZ", 0)) or 0, tonumber(uSt.sget("tzYaw", 0)) or 0,
+  return tonumber(uSt.sget("tzX", 0.36)) or 0.36, tonumber(uSt.sget("tzY", 0.62)) or 0.62,
+         tonumber(uSt.sget("tzZ", -0.10)) or -0.10, tonumber(uSt.sget("tzYaw", 0)) or 0,
          tonumber(uSt.sget("tzPitch", 0)) or 0, tonumber(uSt.sget("tzRoll", 0)) or 0,
-         tonumber(uSt.sget("tzScale", 100)) or 100
+         tonumber(uSt.sget("tzScale", 100)) or 100, math.floor(tonumber(uSt.sget("tzChar", 1)) or 1)
 end
 
--- بثّ إعدادي ليراه الآخرون (نفس قناة العبارات)
-uSt.tzSend = function()
-  uSt.tzSentAt = pulseT
-  local on = (uSt.sget("tzOn", false) == true)
-  local x, y, z, ya, pi2, ro, sc = uSt.tzMine()
+-- لوح الراكب: نرسمه بمستوى السيارة نفسه، فيتحرّك ويميل معها
+uSt.tzQuad = function(bt, x, y, z, sc, tex)
+  if bt == nil or tex == nil then return end
+  local w = 0.62 * ((tonumber(sc) or 100) / 100)
+  local h = w * 1.75                      -- نسبة جسم الإنسان تقريباً
   pcall(function()
-    ac.sendChatMessage(string.format("$KB_TZ:%s|%.3f|%.3f|%.3f|%.1f|%.1f|%.1f|%d",
-      on and "1" or "0", x, y, z, ya, pi2, ro, math.floor(sc)))
+    local p1 = bt:transformPoint(vec3(x + w / 2, y + h / 2, z))
+    local p2 = bt:transformPoint(vec3(x - w / 2, y + h / 2, z))
+    local p3 = bt:transformPoint(vec3(x - w / 2, y - h / 2, z))
+    local p4 = bt:transformPoint(vec3(x + w / 2, y - h / 2, z))
+    if render.setBlendMode and render.BlendMode then
+      pcall(function() render.setBlendMode(render.BlendMode.AlphaBlend) end)
+    end
+    render.quad(p1, p2, p3, p4, rgbm(2.2, 2.2, 2.2, 1), tex)
   end)
 end
 
--- تركيب/تحديث مجسّمي أنا
-uSt.tzSelf = function()
+uSt.tzSend = function()
+  uSt.tzSentAt = pulseT
   local on = (uSt.sget("tzOn", false) == true)
-  if not on then
-    if uSt.tzRef ~= nil then
-      pcall(function() uSt.tzRef:setVisible(false) end)
-      pcall(function() uSt.tzRef:dispose() end)
-      uSt.tzRef = nil
-    end
-    return
-  end
-  if uSt.tzRef == nil then uSt.tzRef = uSt.tzAttach(0) end
-  uSt.tzApply(uSt.tzRef, uSt.tzMine())
+  local x, y, z, ya, pi2, ro, sc, ch = uSt.tzMine()
+  pcall(function()
+    ac.sendChatMessage(string.format("$KB_TZ:%s|%.3f|%.3f|%.3f|%.1f|%.1f|%.1f|%d|%d",
+      on and "1" or "0", x, y, z, ya, pi2, ro, math.floor(sc), ch))
+  end)
 end
 
--- تركيب مجسّمات بقية اللاعبين من بثّهم
-uSt.tzPeersTick = function(sim)
+-- الرسم ثلاثي الأبعاد: راكبي وركّاب الآخرين
+uSt.tzDraw3D = function()
+  local sim = ac.getSim()
   if not sim then return end
-  for idx, d in pairs(uSt.tzPeers) do
+  if uSt.sget("tzOn", false) == true then
+    local me = ac.getCar(0)
+    if me and me.bodyTransform then
+      local x, y, z, _, _, _, sc, ch = uSt.tzMine()
+      uSt.tzQuad(me.bodyTransform, x, y, z, sc, uSt.tzTex(ch))
+    end
+  end
+  for ci, d in pairs(uSt.tzPeers) do
     if d ~= nil and d.on then
-      if d.ref == nil then d.ref = uSt.tzAttach(idx) end
-      if d.dirty then d.dirty = false; uSt.tzApply(d.ref, d.x, d.y, d.z, d.yaw, d.pitch, d.roll, d.sc) end
-    elseif d ~= nil and d.ref ~= nil then
-      pcall(function() d.ref:setVisible(false) end)
-      pcall(function() d.ref:dispose() end)
-      d.ref = nil
+      local c = ac.getCar(ci)
+      if c and c.bodyTransform and c.isConnected then
+        uSt.tzQuad(c.bodyTransform, d.x, d.y, d.z, d.sc, uSt.tzTex(d.ch or 1))
+      end
     end
   end
 end
 
-uSt.drawProfileKB = function(sim)
+uSt.drawProfileKB = function(sim)uSt.drawProfileKB = function(sim)
   local P = uSt.profOpen
   if not P then return end
   local i = P.i or 0
@@ -5301,8 +5212,6 @@ function script.update(dt)
   -- تركيب التعزيز: تثبيت مجسّمي ومجسّمات الآخرين، وإعادة بثّ دورية
   if pulseT > 4 and (pulseT - (uSt.tzTick or 0)) > 1 then
     uSt.tzTick = pulseT
-    pcall(uSt.tzSelf)
-    pcall(function() uSt.tzPeersTick(ac.getSim()) end)
     if (pulseT - (uSt.tzSentAt or -99)) > 20 then pcall(uSt.tzSend) end
   end
   pcall(function() uSt.blkPhys(ac.getSim()) end)
@@ -6186,6 +6095,7 @@ end
 
 function script.draw3D()
   if uSt.czDraw3D then pcall(uSt.czDraw3D) end
+  if uSt.tzDraw3D then pcall(uSt.tzDraw3D) end
 end
 
 ac.log("powered by S N A F i # 9 9 9")
@@ -8266,28 +8176,41 @@ end
 uSt.drawTz = function(X, Y, W, H)
   sectionTitle("تركيب تعزيز", X, Y, W)
   local y = Y + 40
-
-  local path = uSt.tzPath()
-  if path == false then
-    dwRightBox("مجسّم التعزيز غير موجود في محتوى السيرفر", 14, X, y, W, 22, CR); y = y + 26
-    dwRightBox("الملف المطلوب: " .. uSt.TZ_FILE, 12, X, y, W, 18, CDm); y = y + 22
-    dwRightBox("ضعه في مجلد الحلبة: content/tracks/<الحلبة>/", 12, X, y, W, 18, CDm); y = y + 20
-    dwRightBox("على جهازك فقط — لا ترفعه لمجلد الحلبة في السيرفر.", 12, X, y, W, 18, CY)
-    return
-  end
-
   local on = (uSt.sget("tzOn", false) == true)
+
   if bigButton(X, y, W, 44, on and "إيقاف التعزيز" or "تركيب التعزيز",
                on and rgbm(0.75, 0.24, 0.26, 1) or ACC, "##tzon") then
     uSt.sset("tzOn", not on)
-    pcall(uSt.tzSelf)
     pcall(uSt.tzSend)
   end
   y = y + 54
-
   if not on then
-    dwRightBox("شغّله ليركب معك في السيارة، ويراه بقية اللاعبين.", 13, X, y, W, 20, CDm)
+    dwRightBox("اختر راكباً يجلس معك، ويراه بقية اللاعبين.", 13, X, y, W, 20, CDm)
     return
+  end
+
+  -- اختيار الشخصية
+  dwRightBox("الشخصية", 13, X, y, W, 18, CY); y = y + 24
+  do
+    local cur = math.floor(tonumber(uSt.sget("tzChar", 1)) or 1)
+    local n = #uSt.TZ_CHARS
+    local bw = (W - (n - 1) * 8) / n
+    for k = 1, n do
+      local bx = X + (k - 1) * (bw + 8)
+      local sel = (cur == k)
+      ui.setCursor(vec2(bx, y))
+      local cl = ui.invisibleButton("##tzc" .. k, vec2(bw, 64))
+      local hv = ui.itemHovered()
+      ui.drawRectFilled(vec2(bx, y), vec2(bx + bw, y + 64),
+        sel and rgbm(ACC.r, ACC.g, ACC.b, 0.30) or (hv and rgbm(1, 1, 1, 0.10) or rgbm(1, 1, 1, 0.05)), 10)
+      ui.drawRect(vec2(bx, y), vec2(bx + bw, y + 64),
+        sel and ACC or rgbm(1, 1, 1, 0.14), 10, nil, sel and 1.8 or 1)
+      local t = uSt.tzTex(k)
+      if t then pcall(function() ui.drawImage(t, vec2(bx + bw / 2 - 16, y + 6), vec2(bx + bw / 2 + 16, y + 40)) end) end
+      dwBox(uSt.TZ_CHARS[k].n, 12, bx, y + 42, bw, 18, sel and CW or CDm)
+      if cl then uSt.sset("tzChar", k); pcall(uSt.tzSend) end
+    end
+    y = y + 74
   end
 
   local function row(lbl, key, def, mn, mx, fmt)
@@ -8296,36 +8219,20 @@ uSt.drawTz = function(X, Y, W, H)
     local v = ui.slider("##tz" .. key, tonumber(uSt.sget(key, def)) or def, mn, mx, fmt)
     if v ~= (tonumber(uSt.sget(key, def)) or def) then
       uSt.sset(key, v)
-      pcall(uSt.tzSelf)
       if (pulseT - (uSt.tzSentAt or -99)) > 0.6 then pcall(uSt.tzSend) end
     end
-    y = y + 48
+    y = y + 46
   end
 
-  row("يمين / يسار", "tzX", 0, -8, 8, "%.2f م")
-  row("أعلى / أسفل", "tzY", 0, -8, 8, "%.2f م")
-  row("أمام / خلف", "tzZ", 0, -8, 8, "%.2f م")
-  row("الدوران", "tzYaw", 0, -180, 180, "%.0f°")
-  row("الميل", "tzPitch", 0, -90, 90, "%.0f°")
-  row("الانحناء", "tzRoll", 0, -90, 90, "%.0f°")
-  row("الحجم", "tzScale", 100, 10, 400, "%.0f%%")
+  row("يمين / يسار", "tzX", 0.36, -1.2, 1.2, "%.2f م")
+  row("أعلى / أسفل", "tzY", 0.62, -0.5, 1.8, "%.2f م")
+  row("أمام / خلف", "tzZ", -0.10, -2.5, 2.5, "%.2f م")
+  row("الحجم", "tzScale", 100, 40, 220, "%.0f%%")
 
   if bigButton(X, y, W, 36, "إعادة الضبط", rgbm(0.30, 0.32, 0.38, 1), "##tzrst") then
-    uSt.sset("tzX", 0); uSt.sset("tzY", 0); uSt.sset("tzZ", 0)
-    uSt.sset("tzYaw", 0); uSt.sset("tzPitch", 0); uSt.sset("tzRoll", 0)
-    uSt.sset("tzScale", 100)
-    pcall(uSt.tzSelf); pcall(uSt.tzSend)
+    uSt.sset("tzX", 0.36); uSt.sset("tzY", 0.62); uSt.sset("tzZ", -0.10); uSt.sset("tzScale", 100)
+    pcall(uSt.tzSend)
   end
   y = y + 44
-  dwRightBox("إعداداتك محفوظة وتُركَّب تلقائياً في كل دخول.", 12, X, y, W, 18, CDm); y = y + 22
-  if uSt.tzBox ~= nil then
-    dwRightBox(tostring(uSt.tzBox), 11, X, y, W, 16, CC); y = y + 18
-  end
-  if uSt.tzWhy ~= nil then
-    dwRightBox(tostring(uSt.tzWhy), 11, X, y, W, 16,
-      tostring(uSt.tzWhy):find("تم التحميل") and CGR or CY); y = y + 18
-  end
-  if type(path) == "string" then
-    dwRightBox(path:gsub("^.*[/\\]content[/\\]", "…/content/"), 10, X, y, W, 16, CDm)
-  end
+  dwRightBox("إعداداتك محفوظة ويراها بقية اللاعبين تلقائياً.", 12, X, y, W, 18, CDm)
 end
