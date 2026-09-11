@@ -3074,7 +3074,16 @@ uSt.tzAttach = function(i)
   else
     local n = 0
     pcall(function() local ms = ref:findMeshes("{ lodIn:0 }"); if ms then n = ms:size() end end)
-    uSt.tzWhy = "تم التحميل (" .. tostring(n) .. " شبكة)" .. why
+    uSt.tzWhy = "تم التحميل (" .. tostring(n) .. " شبكة)"
+    -- حجم المجسّم وموضعه الأصلي: بهما نعرف هل هو ضخم أو بعيد عن السيارة
+    pcall(function()
+      local ok, mn, mx = pcall(function() return ref:getStaticAABB() end)
+      if ok and mn ~= nil and mx ~= nil then
+        uSt.tzBox = string.format("الحجم %.1f×%.1f×%.1f م · المركز %.1f,%.1f,%.1f",
+          mx.x - mn.x, mx.y - mn.y, mx.z - mn.z,
+          (mx.x + mn.x) * 0.5, (mx.y + mn.y) * 0.5, (mx.z + mn.z) * 0.5)
+      end
+    end)
   end
   return ref
 end
@@ -8278,13 +8287,13 @@ uSt.drawTz = function(X, Y, W, H)
     y = y + 48
   end
 
-  row("يمين / يسار", "tzX", 0, -2, 2, "%.2f م")
-  row("أعلى / أسفل", "tzY", 0, -2, 2, "%.2f م")
-  row("أمام / خلف", "tzZ", 0, -3, 3, "%.2f م")
+  row("يمين / يسار", "tzX", 0, -8, 8, "%.2f م")
+  row("أعلى / أسفل", "tzY", 0, -8, 8, "%.2f م")
+  row("أمام / خلف", "tzZ", 0, -8, 8, "%.2f م")
   row("الدوران", "tzYaw", 0, -180, 180, "%.0f°")
   row("الميل", "tzPitch", 0, -90, 90, "%.0f°")
   row("الانحناء", "tzRoll", 0, -90, 90, "%.0f°")
-  row("الحجم", "tzScale", 100, 30, 250, "%.0f%%")
+  row("الحجم", "tzScale", 100, 10, 400, "%.0f%%")
 
   if bigButton(X, y, W, 36, "إعادة الضبط", rgbm(0.30, 0.32, 0.38, 1), "##tzrst") then
     uSt.sset("tzX", 0); uSt.sset("tzY", 0); uSt.sset("tzZ", 0)
@@ -8294,6 +8303,9 @@ uSt.drawTz = function(X, Y, W, H)
   end
   y = y + 44
   dwRightBox("إعداداتك محفوظة وتُركَّب تلقائياً في كل دخول.", 12, X, y, W, 18, CDm); y = y + 22
+  if uSt.tzBox ~= nil then
+    dwRightBox(tostring(uSt.tzBox), 11, X, y, W, 16, CC); y = y + 18
+  end
   if uSt.tzWhy ~= nil then
     dwRightBox(tostring(uSt.tzWhy), 11, X, y, W, 16,
       tostring(uSt.tzWhy):find("تم التحميل") and CGR or CY); y = y + 18
