@@ -3044,12 +3044,38 @@ end
 -- تركيب المجسّم على سيارة رقم i (0 = سيارتك)
 uSt.tzAttach = function(i)
   local path = uSt.tzPath()
-  if path == false then return nil end
-  local ref = nil
+  if path == false then uSt.tzWhy = "لا يوجد ملف"; return nil end
+  local ref, why = nil, ""
+
+  -- ١) جذر السيارة
   pcall(function()
     local root = ac.findNodes("carRoot:" .. i)
-    if root ~= nil then ref = root:loadKN5(path) end
+    if root == nil then why = why .. " carRoot=nil"
+    else
+      why = why .. " carRoot=" .. tostring(root:size())
+      local ok, r = pcall(function() return root:loadKN5(path) end)
+      if ok and r ~= nil then ref = r else why = why .. " loadFail" end
+    end
   end)
+
+  -- ٢) بديل: التحميل في جذر المشهد ثم تثبيته على السيارة
+  if ref == nil then
+    pcall(function()
+      local sr = ac.findNodes("sceneRoot:yes")
+      if sr ~= nil then
+        local ok, r = pcall(function() return sr:loadKN5(path) end)
+        if ok and r ~= nil then ref = r; why = why .. " viaScene" end
+      end
+    end)
+  end
+
+  if ref == nil then
+    uSt.tzWhy = "فشل التحميل:" .. why
+  else
+    local n = 0
+    pcall(function() local ms = ref:findMeshes("{ lodIn:0 }"); if ms then n = ms:size() end end)
+    uSt.tzWhy = "تم التحميل (" .. tostring(n) .. " شبكة)" .. why
+  end
   return ref
 end
 
@@ -8267,5 +8293,12 @@ uSt.drawTz = function(X, Y, W, H)
     pcall(uSt.tzSelf); pcall(uSt.tzSend)
   end
   y = y + 44
-  dwRightBox("إعداداتك محفوظة وتُركَّب تلقائياً في كل دخول.", 12, X, y, W, 18, CDm)
+  dwRightBox("إعداداتك محفوظة وتُركَّب تلقائياً في كل دخول.", 12, X, y, W, 18, CDm); y = y + 22
+  if uSt.tzWhy ~= nil then
+    dwRightBox(tostring(uSt.tzWhy), 11, X, y, W, 16,
+      tostring(uSt.tzWhy):find("تم التحميل") and CGR or CY); y = y + 18
+  end
+  if type(path) == "string" then
+    dwRightBox(path:gsub("^.*[/\\]content[/\\]", "…/content/"), 10, X, y, W, 16, CDm)
+  end
 end
