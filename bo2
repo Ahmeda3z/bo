@@ -3079,7 +3079,7 @@ uSt.tzDraw3D = function()
   end
 end
 
-uSt.drawProfileKB = function(sim)uSt.drawProfileKB = function(sim)
+uSt.drawProfileKB = function(sim)
   local P = uSt.profOpen
   if not P then return end
   local i = P.i or 0
