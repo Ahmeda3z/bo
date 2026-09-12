@@ -32,7 +32,7 @@ local PALETTE = {
   { name = "وردي",    c = rgbm(0.96, 0.36, 0.62, 1) },
   { name = "أحمر",    c = rgbm(0.95, 0.32, 0.32, 1) },
 }
-local stor = ac.storage({ accentIdx = 1, driftEnabled = true, rulesAgreed = false, chatOpacity = 0.95, menuOpacity = 0.95, menuOfsX = 0, menuOfsY = 0, chatOfsX = 0, chatOfsY = 0, admOfsX = 0, admOfsY = 0, rec1 = "😂", rec2 = "👑", rec3 = "🫡", perfMode = false, extraKeep = true, chatW = 640, chatHistH = 186, tpDist = 8, boostMode = 1, boostTarget = 250, boostAccel = 60, chatEmoji = true, chatPhrases = true, uiScale = 1.0, uiFit = false, npScale = 100, npFlag = true, npDev = true, npSpd = true, npPing = true, npVanilla = false, tpPerm = 0, menuLayout = 1, setOfsX = 0, setOfsY = 0, npMax = 220, glowEdges = true, npName = true, npImg = true, npDist = false, npHideGame = false, npHideDist = 99, timeFlip12 = false, tf12fix = false, pmFrom = 0, pmPublic = true, pmStyle = 0, barPosPub = 0, barPosPm = 0, blockList = "", npShow = true, phW = 880, phPad = 0, phX = -1, phY = -1, fxMode = 0, fxPower = 100, fxBri = 100, fxSat = 100, fxHue = 0, pipFov = 40, camOn = false, camBright = 78, camOut = false, camDist = 7, camDir = 0, camW = 420, camFov = 62, camX = 0, camY = 0, swapPend = false, swapAt = 0, swapX = 0, swapY = 0, swapZ = 0, swapDX = 0, swapDZ = 1, hudDrift = true, hudBottom = true, hudRewind = true, hudRules = true })
+local stor = ac.storage({ accentIdx = 1, driftEnabled = true, rulesAgreed = false, chatOpacity = 0.95, menuOpacity = 0.95, menuOfsX = 0, menuOfsY = 0, chatOfsX = 0, chatOfsY = 0, admOfsX = 0, admOfsY = 0, rec1 = "😂", rec2 = "👑", rec3 = "🫡", perfMode = false, extraKeep = true, chatW = 640, chatHistH = 186, tpDist = 8, boostMode = 1, boostTarget = 250, boostAccel = 60, chatEmoji = true, chatPhrases = true, uiScale = 1.0, uiFit = false, npScale = 100, npFlag = true, npDev = true, npSpd = true, npPing = true, npVanilla = false, tpPerm = 0, menuLayout = 1, setOfsX = 0, setOfsY = 0, npMax = 220, glowEdges = true, npName = true, npImg = true, npDist = false, npHideGame = false, npHideDist = 99, timeFlip12 = false, tf12fix = false, pmFrom = 0, pmPublic = true, pmStyle = 0, barPosPub = 0, barPosPm = 0, blockList = "", dash1 = "map", dash2 = "boost", dash3 = "time", dash4 = "tp", dash5 = "drift", dash6 = "extra", npShow = true, phW = 880, phPad = 0, phX = -1, phY = -1, fxMode = 0, fxPower = 100, fxBri = 100, fxSat = 100, fxHue = 0, pipFov = 40, camOn = false, camBright = 78, camOut = false, camDist = 7, camDir = 0, camW = 420, camFov = 62, camX = 0, camY = 0, swapPend = false, swapAt = 0, swapX = 0, swapY = 0, swapZ = 0, swapDX = 0, swapDZ = 1, hudDrift = true, hudBottom = true, hudRewind = true, hudRules = true })
 if stor.chatOpacity < 0.35 then stor.chatOpacity = 0.95 end
 if stor.menuOpacity < 0.35 then stor.menuOpacity = 0.95 end
 if stor.accentIdx < 1 or stor.accentIdx > #PALETTE then stor.accentIdx = 1 end
@@ -3376,6 +3376,36 @@ uSt.panelW = function(cur)
   return math.max(PANEL_W, math.min(1180, math.floor(sw * 0.80)))
 end
 
+-- كل البطاقات المتاحة للرئيسية. الحقل fn يُملأ لاحقاً لأن دوالّ الأقسام
+-- معرَّفة بعد هذا الموضع في الملف.
+uSt.DASH = {
+  { k = "map",   t = "الخريطة" },
+  { k = "tp",    t = "الانتقال" },
+  { k = "boost", t = "البوست والأداء" },
+  { k = "drift", t = "الهجولة" },
+  { k = "time",  t = "الوقت والجو" },
+  { k = "extra", t = "الاكسترات" },
+  { k = "grip",  t = "التحكّم" },
+  { k = "cars",  t = "تبديل السيارة" },
+  { k = "spots", t = "السكنات" },
+  { k = "stats", t = "إحصائياتي" },
+  { k = "repair",t = "التصليح" },
+  { k = "cz",    t = "تركيب عبارات" },
+  { k = "block", t = "حظر لاعب" },
+  { k = "chat",  t = "الشات" },
+  { k = "mode",  t = "وضع اللعب" },
+}
+uSt.dashIdx = function(k)
+  for i = 1, #uSt.DASH do if uSt.DASH[i].k == k then return i end end
+  return 1
+end
+uSt.dashSlot = function(n)
+  local def = { "map", "boost", "time", "tp", "drift", "extra" }
+  local v = uSt.sget("dash" .. n, def[n] or "map")
+  if type(v) ~= "string" or v == "" then v = def[n] or "map" end
+  return v
+end
+
 uSt.dashChip = function(x, y, w, h, lbl, val, col)
   ui.drawRectFilled(vec2(x, y), vec2(x + w, y + h), rgbm(1, 1, 1, 0.05), 8)
   ui.drawRect(vec2(x, y), vec2(x + w, y + h), rgbm(col.r, col.g, col.b, 0.35), 8, nil, 1)
@@ -3397,71 +3427,221 @@ uSt.dashCard = function(x, y, w, h, title, fn)
   end
 end
 
+-- ── بطاقة: حظر لاعب ──
+uSt.cardBlock = function(X, Y, W, H)
+  local sim = ac.getSim()
+  if not sim then return end
+  ui.setCursor(vec2(X, Y))
+  ui.childWindow("##dashblk", vec2(W, H), function()
+    local yy, n = 0, 0
+    for i = 1, (sim.carsCount or 1) - 1 do
+      local c = ac.getCar(i)
+      local nm = nil
+      pcall(function() nm = ac.getDriverName(i) end)
+      if c and c.isConnected and nm ~= nil and nm ~= "" and not uSt.isBot(nm, i) then
+        n = n + 1
+        local blocked = uSt.isBlocked(nm)
+        ui.drawRectFilled(vec2(0, yy), vec2(W - 16, yy + 30), rgbm(1, 1, 1, 0.05), 7)
+        dwRightBox(nm, 12, 6, yy + 7, W - 110, 16, blocked and CDm or CW)
+        ui.setCursor(vec2(W - 100, yy + 3))
+        local cl = ui.invisibleButton("##dblk" .. i, vec2(80, 24))
+        local hv = ui.itemHovered()
+        ui.drawRectFilled(vec2(W - 100, yy + 3), vec2(W - 20, yy + 27),
+          blocked and rgbm(0.20, 0.72, 0.42, hv and 1 or 0.8) or rgbm(0.85, 0.22, 0.24, hv and 1 or 0.8), 7)
+        dwBox(blocked and "إلغاء" or "حظر", 11, W - 100, yy + 7, 80, 16, CW)
+        if cl then uSt.blkToggle(nm) end
+        yy = yy + 34
+      end
+    end
+    if n == 0 then dwBox("لا يوجد لاعبون متصلون", 12, 0, 20, W - 16, 18, CDm) end
+    ui.dummy(vec2(1, yy + 4))
+  end)
+end
+
+-- ── بطاقة: الشات (آخر الرسائل) ──
+uSt.cardChat = function(X, Y, W, H)
+  ui.setCursor(vec2(X, Y))
+  ui.childWindow("##dashchat", vec2(W, H), function()
+    local yy = 0
+    local from = math.max(1, #chatLog - 14)
+    for i = from, #chatLog do
+      local m = chatLog[i]
+      if m ~= nil then
+        local col = m.srv and CY or (m.own and ACC or CW)
+        local nm = tostring(m.name or "")
+        local tx = tostring(m.text or "")
+        if tx ~= "" then
+          dwRightBox(nm .. " : " .. tx, 11, 4, yy, W - 24, 16, col)
+          yy = yy + 18
+        end
+      end
+    end
+    if yy == 0 then dwBox("لا توجد رسائل بعد", 12, 0, 20, W - 16, 18, CDm) end
+    ui.dummy(vec2(1, yy + 4))
+  end)
+end
+
+-- ── بطاقة: وضع اللعب ──
+uSt.cardMode = function(X, Y, W, H)
+  local cur = uSt.speedMode
+  dwRightBox("اختر وضعك — ترى من اختار نفس وضعك فقط", 11, X, Y, W, 16, CDm)
+  local by = Y + 24
+  local bh = math.min(44, math.max(30, (H - 34) * 0.42))
+  local function mode(lbl, val, col, yy)
+    local sel = (cur == val)
+    ui.setCursor(vec2(X, yy))
+    local cl = ui.invisibleButton("##dmode" .. val, vec2(W, bh))
+    local hv = ui.itemHovered()
+    ui.drawRectFilled(vec2(X, yy), vec2(X + W, yy + bh),
+      sel and rgbm(col.r, col.g, col.b, 0.85) or (hv and rgbm(1, 1, 1, 0.12) or rgbm(1, 1, 1, 0.05)), 9)
+    ui.drawRect(vec2(X, yy), vec2(X + W, yy + bh), sel and col or rgbm(1, 1, 1, 0.14), 9, nil, sel and 1.8 or 1)
+    dwBox(lbl, 13, X, yy + bh * 0.5 - 9, W, 18, sel and DK or CW)
+    if cl and not sel then uSt.speedMode = val; uSt.sendMode(); uSt.visTick = 0 end
+  end
+  mode("سرعة مفتوحة", 0, CGR, by)
+  mode("محدّد ٢٦٠", 1, CY, by + bh + 8)
+end
+
+uSt.dashFn = function(k)
+  if k == "map" then return drawMap
+  elseif k == "tp" then return drawTeleport
+  elseif k == "boost" then return drawBoost
+  elseif k == "drift" then return drawDrift
+  elseif k == "time" then return drawTime
+  elseif k == "extra" then return drawExtras
+  elseif k == "grip" then return drawGrip
+  elseif k == "cars" then return drawCars
+  elseif k == "spots" then return drawSkin
+  elseif k == "stats" then return uSt.drawStats
+  elseif k == "repair" then return drawRepair
+  elseif k == "cz" then return uSt.drawCustomize
+  elseif k == "block" then return uSt.cardBlock
+  elseif k == "chat" then return uSt.cardChat
+  elseif k == "mode" then return uSt.cardMode
+  end
+  return nil
+end
+
 uSt.drawDash = function(X, Y, W, H)
   local sim = ac.getSim()
 
-  -- ── الشريط العلوي: الصورة · الاسم · الإحصائيات · FPS/CPU ──
-  local hdrH = 74
+  -- ═══ الشريط العلوي ═══
+  local hdrH = 84
   ui.drawRectFilled(vec2(X, Y), vec2(X + W, Y + hdrH), rgbm(ACC.r, ACC.g, ACC.b, 0.10), 12)
   ui.drawRect(vec2(X, Y), vec2(X + W, Y + hdrH), rgbm(ACC.r, ACC.g, ACC.b, 0.35), 12, nil, 1.2)
 
+  -- الهوية على اليمين: الصورة والاسم — بالضغط تفتح بطاقتك
   local me = ""
   pcall(function() me = ac.getDriverName(0) or "" end)
   local av = nil
   pcall(function() if uSt.avInpOf then av = (uSt.avInpOf(0)) end end)
-  local ax = X + W - 62
-  ui.drawRectFilled(vec2(ax, Y + 9), vec2(ax + 56, Y + 65), rgbm(0, 0, 0, 0.35), 10)
-  if av then pcall(function() ui.drawImage(av, vec2(ax, Y + 9), vec2(ax + 56, Y + 65)) end)
-  elseif LOGO_TEX then pcall(function() ui.drawImage(LOGO_TEX, vec2(ax + 6, Y + 15), vec2(ax + 50, Y + 59)) end) end
-  dwRightBox(me ~= "" and me or "لاعب", 18, X + 10, Y + 10, W - 84, 24, CW)
-  dwRightBox(uSt.brandName or "TeamKabos", 11, X + 10, Y + 34, W - 84, 14, ACC)
+  local idW = 210
+  local ix = X + W - idW - 6
+  ui.setCursor(vec2(ix, Y + 8))
+  local idCl = ui.invisibleButton("##dashme", vec2(idW, hdrH - 16))
+  local idHv = ui.itemHovered()
+  ui.drawRectFilled(vec2(ix, Y + 8), vec2(ix + idW, Y + hdrH - 8),
+    idHv and rgbm(1, 1, 1, 0.10) or rgbm(1, 1, 1, 0.04), 10)
+  local ax = ix + idW - 62
+  ui.drawRectFilled(vec2(ax, Y + 14), vec2(ax + 56, Y + 70), rgbm(0, 0, 0, 0.35), 10)
+  if av then pcall(function() ui.drawImage(av, vec2(ax, Y + 14), vec2(ax + 56, Y + 70)) end)
+  elseif LOGO_TEX then pcall(function() ui.drawImage(LOGO_TEX, vec2(ax + 6, Y + 20), vec2(ax + 50, Y + 64)) end) end
+  dwRightBox(me ~= "" and me or "لاعب", 17, ix + 8, Y + 18, idW - 74, 22, CW)
+  dwRightBox(idHv and "اضغط لفتح بطاقتك" or (uSt.brandName or "TeamKabos"), 11,
+    ix + 8, Y + 42, idW - 74, 14, idHv and CW or ACC)
+  if idCl then uSt.profOpen = { i = 0, name = me }; menuOpen = false end
 
+  -- الشرائح على اليسار: لا تتداخل مع الاسم أبداً
   do
     local fps, cpu = 0, 0
     pcall(function() fps = math.floor(sim.fps or 0) end)
     pcall(function() cpu = math.floor(sim.cpuOccupancy or 0) end)
-
     local sec = tonumber(uSt.stSec or 0) or 0
     if uSt.stSec and uSt.stAt then sec = sec + (pulseT - uSt.stAt) end
-    local hrs = math.floor(sec / 3600)
-    local lvl = tonumber(uSt.stLevel or 0) or 0
-    local rnk = tonumber(uSt.stRank or 0) or 0
-    local bd  = tonumber(uSt.stBest or 0) or 0
-
-    local n, gap = 6, 6
-    local cw = (W - 84 - gap * (n - 1)) / n
-    local cy = Y + 50
     local vals = {
-      { "ساعاتك", hrs > 0 and hrs or "-", CC },
-      { "ترتيبك", rnk > 0 and ("#" .. rnk) or "-", CY },
-      { "مستواك", lvl > 0 and lvl or "-", ACC },
-      { "أفضل هجولة", bd > 0 and bd or "-", CGR },
+      { "ساعاتك", math.floor(sec / 3600), CC },
+      { "ترتيبك", (uSt.stRank and uSt.stRank > 0) and ("#" .. uSt.stRank) or "-", CY },
+      { "مستواك", uSt.stLevel or "-", ACC },
+      { "أفضل هجولة", uSt.stBest or "-", CGR },
       { "FPS", fps, fps >= 60 and CGR or (fps >= 30 and CY or CR) },
       { "CPU", cpu .. "%", cpu < 70 and CGR or (cpu < 90 and CY or CR) },
     }
+    local avail = (ix - 8) - (X + 10)
+    local n, gap = #vals, 6
+    local cw = math.max(58, (avail - gap * (n - 1)) / n)
     for k = 1, n do
-      uSt.dashChip(X + 10 + (k - 1) * (cw + gap), cy - 28, cw, 44, vals[k][1], vals[k][2], vals[k][3])
+      uSt.dashChip(X + 10 + (k - 1) * (cw + gap), Y + 20, cw, 44, vals[k][1], vals[k][2], vals[k][3])
     end
   end
 
-  -- ── شبكة البطاقات: ثلاثة أعمدة ──
-  local top = Y + hdrH + 10
-  local gh  = H - hdrH - 10
+  -- ═══ الشبكة + التخصيص ═══
+  local top = Y + hdrH + 34
+  local gh  = H - hdrH - 34
   local gap = 10
   local cw  = (W - gap * 2) / 3
-  local c1, c2, c3 = X, X + cw + gap, X + (cw + gap) * 2
+  local hA  = math.floor(gh * 0.52) - gap
+  local hB  = gh - hA - gap
 
-  local hA = math.floor(gh * 0.52) - gap
-  local hB = gh - hA - gap
+  -- زرّ التخصيص
+  do
+    local bw, bh2 = 104, 26
+    local bx, by = X + W - bw, Y + hdrH + 4
+    ui.setCursor(vec2(bx, by))
+    local cl = ui.invisibleButton("##dashcust", vec2(bw, bh2))
+    local hv = ui.itemHovered()
+    ui.drawRectFilled(vec2(bx, by), vec2(bx + bw, by + bh2),
+      uSt.dashEdit and rgbm(ACC.r, ACC.g, ACC.b, 0.9) or (hv and rgbm(1, 1, 1, 0.14) or rgbm(1, 1, 1, 0.06)), 8)
+    ui.drawRect(vec2(bx, by), vec2(bx + bw, by + bh2), rgbm(ACC.r, ACC.g, ACC.b, 0.5), 8, nil, 1)
+    dwBox(uSt.dashEdit and "إنهاء التخصيص" or "تخصيص", 12, bx, by + 5, bw, 16,
+      uSt.dashEdit and DK or CW)
+    if cl then uSt.dashEdit = not uSt.dashEdit; uSt.dashPick = nil end
+    if uSt.dashEdit then
+      dwRightBox("اضغط على أي بطاقة لتستبدلها", 11, X, by + 5, W - bw - 10, 16, CY)
+    end
+  end
 
-  uSt.dashCard(c1, top, cw, hA, "الخريطة", drawMap)
-  uSt.dashCard(c1, top + hA + gap, cw, hB, "الانتقال", drawTeleport)
+  local pos = {
+    { X, top, cw, hA }, { X + cw + gap, top, cw, hA }, { X + (cw + gap) * 2, top, cw, hA },
+    { X, top + hA + gap, cw, hB }, { X + cw + gap, top + hA + gap, cw, hB },
+    { X + (cw + gap) * 2, top + hA + gap, cw, hB },
+  }
+  for n = 1, 6 do
+    local p = pos[n]
+    local key = uSt.dashSlot(n)
+    local meta = uSt.DASH[uSt.dashIdx(key)]
+    uSt.dashCard(p[1], p[2], p[3], p[4], meta.t, (not uSt.dashEdit) and uSt.dashFn(key) or nil)
+    if uSt.dashEdit then
+      ui.setCursor(vec2(p[1], p[2]))
+      local cl = ui.invisibleButton("##dslot" .. n, vec2(p[3], p[4]))
+      local hv = ui.itemHovered()
+      ui.drawRectFilled(vec2(p[1], p[2]), vec2(p[1] + p[3], p[2] + p[4]),
+        rgbm(ACC.r, ACC.g, ACC.b, hv and 0.22 or 0.10), 12)
+      dwBox("استبدال", 14, p[1], p[2] + p[4] * 0.5 - 10, p[3], 20, CW)
+      if cl then uSt.dashPick = n end
+    end
+  end
 
-  uSt.dashCard(c2, top, cw, hA, "البوست والأداء", drawBoost)
-  uSt.dashCard(c2, top + hA + gap, cw, hB, "الهجولة", drawDrift)
-
-  uSt.dashCard(c3, top, cw, hA, "الوقت والجو", drawTime)
-  uSt.dashCard(c3, top + hA + gap, cw, hB, "الاكسترات", drawExtras)
+  -- قائمة اختيار البطاقة
+  if uSt.dashEdit and uSt.dashPick ~= nil then
+    local bw, bh2 = 260, math.min(H - 20, #uSt.DASH * 30 + 44)
+    local bx, by = X + (W - bw) * 0.5, Y + 40
+    ui.drawRectFilled(vec2(bx, by), vec2(bx + bw, by + bh2), rgbm(0.05, 0.06, 0.09, 0.98), 12)
+    ui.drawRect(vec2(bx, by), vec2(bx + bw, by + bh2), ACC, 12, nil, 1.5)
+    dwBox("اختر بطاقة للمكان " .. uSt.dashPick, 13, bx, by + 8, bw, 18, CW)
+    for i = 1, #uSt.DASH do
+      local ry = by + 32 + (i - 1) * 30
+      ui.setCursor(vec2(bx + 8, ry))
+      local cl = ui.invisibleButton("##dpick" .. i, vec2(bw - 16, 26))
+      local hv = ui.itemHovered()
+      ui.drawRectFilled(vec2(bx + 8, ry), vec2(bx + bw - 8, ry + 26),
+        hv and rgbm(ACC.r, ACC.g, ACC.b, 0.55) or rgbm(1, 1, 1, 0.05), 7)
+      dwBox(uSt.DASH[i].t, 12, bx + 8, ry + 5, bw - 16, 16, CW)
+      if cl then
+        uSt.sset("dash" .. uSt.dashPick, uSt.DASH[i].k)
+        uSt.dashPick = nil
+      end
+    end
+  end
 end
 
 uSt.drawSection = function(id, X, Y, W2, H2)
@@ -6847,9 +7027,23 @@ uSt.drawRail = function(sim)
   -- عناصر الشريط: الأقسام + الملف + الشكوى + الإعدادات
   local items = {}
   for k = 1, #TABS do items[#items + 1] = { kind = "tab", t = TABS[k] } end
-  items[#items + 1] = { kind = "prof", label = "بطاقتي" }
   if pulseT > 30 then items[#items + 1] = { kind = "rep", label = "شكوى" } end
   items[#items + 1] = { kind = "set", label = "الإعدادات" }
+
+  -- FPS و CPU تحت شعار الفريق مباشرة
+  do
+    local fps, cpu = 0, 0
+    pcall(function() local sm = ac.getSim(); fps = math.floor(sm.fps or 0); cpu = math.floor(sm.cpuOccupancy or 0) end)
+    local fc = fps >= 60 and CGR or (fps >= 30 and CY or CR)
+    local cc = cpu < 70 and CGR or (cpu < 90 and CY or CR)
+    if vert then
+      dwBox(tostring(fps) .. " FPS", 10, 0, 40, w, 12, fc)
+      dwBox(cpu .. "% CPU", 10, 0, 52, w, 12, cc)
+    else
+      dwBox(tostring(fps) .. " FPS", 10, 2, 34, 52, 12, fc)
+      dwBox(cpu .. "% CPU", 10, 2, 46, 52, 12, cc)
+    end
+  end
 
   local ICON = 28
   local n = #items
