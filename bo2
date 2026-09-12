@@ -7069,13 +7069,17 @@ uSt.drawRail = function(sim)
       end)
       local fc = fps >= 60 and CGR or (fps >= 30 and CY or CR)
       local cc = cpu < 70 and CGR or (cpu < 90 and CY or CR)
+      -- خلفية صغيرة خلف الرقمين حتى لا يختلطا بالشعار مهما كان مقاس الشريط
       if vert then
-        dwBox(tostring(fps) .. " FPS", 10, 0, ly2 + 46, w, 12, rgbm(fc.r, fc.g, fc.b, sl))
-        dwBox(cpu .. "% CPU", 10, 0, ly2 + 58, w, 12, rgbm(cc.r, cc.g, cc.b, sl))
+        local by2 = ly2 + 50                       -- أسفل الشعار (الشعار ينتهي عند ly2+42)
+        ui.drawRectFilled(vec2(6, by2 - 2), vec2(w - 6, by2 + 28), rgbm(0, 0, 0, 0.40 * sl), 6)
+        dwBox(tostring(fps) .. " FPS", 10, 0, by2, w, 13, rgbm(fc.r, fc.g, fc.b, sl))
+        dwBox(cpu .. "% CPU", 10, 0, by2 + 14, w, 13, rgbm(cc.r, cc.g, cc.b, sl))
       else
-        local tx = lx + 48
-        dwLeftBox(tostring(fps) .. " FPS", 10, tx, ly2 + 6, 56, 12, rgbm(fc.r, fc.g, fc.b, sl))
-        dwLeftBox(cpu .. "% CPU", 10, tx, ly2 + 22, 56, 12, rgbm(cc.r, cc.g, cc.b, sl))
+        local tx = lx + 52                         -- يمين الشعار تماماً
+        ui.drawRectFilled(vec2(tx - 4, ly2 + 2), vec2(tx + 62, ly2 + 40), rgbm(0, 0, 0, 0.40 * sl), 6)
+        dwLeftBox(tostring(fps) .. " FPS", 10, tx, ly2 + 5, 58, 13, rgbm(fc.r, fc.g, fc.b, sl))
+        dwLeftBox(cpu .. "% CPU", 10, tx, ly2 + 22, 58, 13, rgbm(cc.r, cc.g, cc.b, sl))
       end
     end
 
