@@ -7040,21 +7040,6 @@ uSt.drawRail = function(sim)
   if pulseT > 30 then items[#items + 1] = { kind = "rep", label = "شكوى" } end
   items[#items + 1] = { kind = "set", label = "الإعدادات" }
 
-  -- FPS و CPU تحت شعار الفريق مباشرة
-  do
-    local fps, cpu = 0, 0
-    pcall(function() local sm = ac.getSim(); fps = math.floor(sm.fps or 0); cpu = math.floor(sm.cpuOccupancy or 0) end)
-    local fc = fps >= 60 and CGR or (fps >= 30 and CY or CR)
-    local cc = cpu < 70 and CGR or (cpu < 90 and CY or CR)
-    if vert then
-      dwBox(tostring(fps) .. " FPS", 10, 0, 40, w, 12, fc)
-      dwBox(cpu .. "% CPU", 10, 0, 52, w, 12, cc)
-    else
-      dwBox(tostring(fps) .. " FPS", 10, 2, 34, 52, 12, fc)
-      dwBox(cpu .. "% CPU", 10, 2, 46, 52, 12, cc)
-    end
-  end
-
   local ICON = 28
   local n = #items
   local run = (vert and h or w) - 56          -- مساحة بعد الشعار
@@ -7074,6 +7059,24 @@ uSt.drawRail = function(sim)
       local lx = vert and (w - 42) * 0.5 or 10
       local ly2 = vert and 10 or (h - 42) * 0.5
       if LOGO_TEX then pcall(function() ui.drawImage(LOGO_TEX, vec2(lx, ly2), vec2(lx + 42, ly2 + 42), rgbm(1, 1, 1, sl)) end) end
+
+      -- الفريمات والمعالج: رأسي ⇦ تحت الشعار · أفقي ⇦ يمين الشعار (لا فوقه)
+      local fps, cpu = 0, 0
+      pcall(function()
+        local sm = ac.getSim()
+        fps = math.floor(sm.fps or 0)
+        cpu = math.floor(sm.cpuOccupancy or 0)
+      end)
+      local fc = fps >= 60 and CGR or (fps >= 30 and CY or CR)
+      local cc = cpu < 70 and CGR or (cpu < 90 and CY or CR)
+      if vert then
+        dwBox(tostring(fps) .. " FPS", 10, 0, ly2 + 46, w, 12, rgbm(fc.r, fc.g, fc.b, sl))
+        dwBox(cpu .. "% CPU", 10, 0, ly2 + 58, w, 12, rgbm(cc.r, cc.g, cc.b, sl))
+      else
+        local tx = lx + 48
+        dwLeftBox(tostring(fps) .. " FPS", 10, tx, ly2 + 6, 56, 12, rgbm(fc.r, fc.g, fc.b, sl))
+        dwLeftBox(cpu .. "% CPU", 10, tx, ly2 + 22, 56, 12, rgbm(cc.r, cc.g, cc.b, sl))
+      end
     end
 
     local pos = start0
