@@ -32,7 +32,7 @@ local PALETTE = {
   { name = "وردي",    c = rgbm(0.96, 0.36, 0.62, 1) },
   { name = "أحمر",    c = rgbm(0.95, 0.32, 0.32, 1) },
 }
-local stor = ac.storage({ accentIdx = 1, driftEnabled = true, rulesAgreed = false, chatOpacity = 0.95, menuOpacity = 0.95, menuOfsX = 0, menuOfsY = 0, chatOfsX = 0, chatOfsY = 0, admOfsX = 0, admOfsY = 0, rec1 = "😂", rec2 = "👑", rec3 = "🫡", perfMode = false, extraKeep = true, chatW = 640, chatHistH = 186, tpDist = 8, boostMode = 1, boostTarget = 250, boostAccel = 60, chatEmoji = true, chatPhrases = true, uiScale = 1.0, uiFit = false, npScale = 100, npFlag = true, npDev = true, npSpd = true, npPing = true, npVanilla = false, tpPerm = 0, menuLayout = 1, setOfsX = 0, setOfsY = 0, npMax = 220, glowEdges = true, npName = true, npImg = true, npDist = false, npHideGame = false, npHideDist = 99, timeFlip12 = false, tf12fix = false, pmFrom = 0, pmPublic = true, pmStyle = 0, barPosPub = 0, barPosPm = 0, blockList = "", dash1 = "map", dash2 = "boost", dash3 = "time", dash4 = "tp", dash5 = "drift", dash6 = "extra", npShow = true, phW = 880, phPad = 0, phX = -1, phY = -1, fxMode = 0, fxPower = 100, fxBri = 100, fxSat = 100, fxHue = 0, pipFov = 40, camOn = false, camBright = 78, camOut = false, camDist = 7, camDir = 0, camW = 420, camFov = 62, camX = 0, camY = 0, swapPend = false, swapAt = 0, swapX = 0, swapY = 0, swapZ = 0, swapDX = 0, swapDZ = 1, hudDrift = true, hudBottom = true, hudRewind = true, hudRules = true })
+local stor = ac.storage({ accentIdx = 1, driftEnabled = true, rulesAgreed = false, chatOpacity = 0.95, menuOpacity = 0.95, menuOfsX = 0, menuOfsY = 0, chatOfsX = 0, chatOfsY = 0, admOfsX = 0, admOfsY = 0, rec1 = "😂", rec2 = "👑", rec3 = "🫡", perfMode = false, extraKeep = true, chatW = 640, chatHistH = 186, tpDist = 8, boostMode = 1, boostTarget = 250, boostAccel = 60, chatEmoji = true, chatPhrases = true, uiScale = 1.0, uiFit = false, npScale = 100, npFlag = true, npDev = true, npSpd = true, npPing = true, npVanilla = false, tpPerm = 0, menuLayout = 1, setOfsX = 0, setOfsY = 0, npMax = 220, glowEdges = true, npName = true, npImg = true, npDist = false, npHideGame = false, npHideDist = 99, timeFlip12 = false, tf12fix = false, pmFrom = 0, pmPublic = true, pmStyle = 0, barPosPub = 0, barPosPm = 0, joins = 0, blockList = "", dash1 = "map", dash2 = "boost", dash3 = "time", dash4 = "tp", dash5 = "drift", dash6 = "extra", npShow = true, phW = 880, phPad = 0, phX = -1, phY = -1, fxMode = 0, fxPower = 100, fxBri = 100, fxSat = 100, fxHue = 0, pipFov = 40, camOn = false, camBright = 78, camOut = false, camDist = 7, camDir = 0, camW = 420, camFov = 62, camX = 0, camY = 0, swapPend = false, swapAt = 0, swapX = 0, swapY = 0, swapZ = 0, swapDX = 0, swapDZ = 1, hudDrift = true, hudBottom = true, hudRewind = true, hudRules = true })
 if stor.chatOpacity < 0.35 then stor.chatOpacity = 0.95 end
 if stor.menuOpacity < 0.35 then stor.menuOpacity = 0.95 end
 if stor.accentIdx < 1 or stor.accentIdx > #PALETTE then stor.accentIdx = 1 end
@@ -3558,17 +3558,20 @@ uSt.drawDash = function(X, Y, W, H)
     pcall(function() cpu = math.floor(sim.cpuOccupancy or 0) end)
     local sec = tonumber(uSt.stSec or 0) or 0
     if uSt.stSec and uSt.stAt then sec = sec + (pulseT - uSt.stAt) end
+    local hh, mm = math.floor(sec / 3600), math.floor((sec % 3600) / 60)
     local vals = {
-      { "ساعاتك", math.floor(sec / 3600), CC },
+      { "وقتك في السيرفر", hh .. "س " .. mm .. "د", CC },
+      { "مرات دخولك", tonumber(uSt.sget("joins", 1)) or 1, rgbm(0.75, 0.55, 1, 1) },
       { "ترتيبك", (uSt.stRank and uSt.stRank > 0) and ("#" .. uSt.stRank) or "-", CY },
       { "مستواك", uSt.stLevel or "-", ACC },
       { "أفضل هجولة", uSt.stBest or "-", CGR },
       { "FPS", fps, fps >= 60 and CGR or (fps >= 30 and CY or CR) },
       { "CPU", cpu .. "%", cpu < 70 and CGR or (cpu < 90 and CY or CR) },
     }
+    -- الشرائح صارت سبعاً: نضيّق قليلاً بدل التداخل
     local avail = (ix - 8) - (X + 10)
     local n, gap = #vals, 6
-    local cw = math.max(58, (avail - gap * (n - 1)) / n)
+    local cw = math.max(52, (avail - gap * (n - 1)) / n)
     for k = 1, n do
       uSt.dashChip(X + 10 + (k - 1) * (cw + gap), Y + 20, cw, 44, vals[k][1], vals[k][2], vals[k][3])
     end
@@ -3610,7 +3613,7 @@ uSt.drawDash = function(X, Y, W, H)
     local key = uSt.dashSlot(n)
     local meta = uSt.DASH[uSt.dashIdx(key)]
     uSt.dashCard(p[1], p[2], p[3], p[4], meta.t, (not uSt.dashEdit) and uSt.dashFn(key) or nil)
-    if uSt.dashEdit then
+    if uSt.dashEdit and uSt.dashPick == nil then
       ui.setCursor(vec2(p[1], p[2]))
       local cl = ui.invisibleButton("##dslot" .. n, vec2(p[3], p[4]))
       local hv = ui.itemHovered()
@@ -3618,6 +3621,8 @@ uSt.drawDash = function(X, Y, W, H)
         rgbm(ACC.r, ACC.g, ACC.b, hv and 0.22 or 0.10), 12)
       dwBox("استبدال", 14, p[1], p[2] + p[4] * 0.5 - 10, p[3], 20, CW)
       if cl then uSt.dashPick = n end
+    elseif uSt.dashEdit and uSt.dashPick == n then
+      ui.drawRect(vec2(p[1], p[2]), vec2(p[1] + p[3], p[2] + p[4]), ACC, 12, nil, 2.2)
     end
   end
 
@@ -5393,6 +5398,11 @@ end
 -- إخفاء شات اللعبة الأصلي (طريقة IDDL): نلقى نافذته ونخفيها ونعيد الإخفاء دورياً
 -- شات اللعبة الأصلي: نخفيه دورياً، وأي محاولة لفتحه أو الكتابة فيه = نفتح شاتنا العربي
 function script.update(dt)
+  -- عدّاد مرات الدخول: مرّة واحدة لكل جلسة
+  if not uSt.joinCounted and pulseT > 8 then
+    uSt.joinCounted = true
+    pcall(function() uSt.sset("joins", (tonumber(uSt.sget("joins", 0)) or 0) + 1) end)
+  end
   pcall(uSt.blkLoad)
   if pulseT > 6 then pcall(uSt.blkResend) end
   pcall(function() uSt.blkPhys(ac.getSim()) end)
